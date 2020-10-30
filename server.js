@@ -41,13 +41,9 @@ function handleLocation(request, response){
         lat = apiObject.lat;
         lon = apiObject.lon;
         response.status(200).json(locationObject);
+    }).catch ((error) => {
+        response.status(500).send('something went wrong');
     });
-
-  
-    // } catch (error) {
-    //     response.status(500).send('something went wrong');
-
-    // }
 }
 
 function Location(city, display_name, lat, lon){
@@ -81,11 +77,9 @@ function handleWeather(request, response){
         }
         response.status(200).json(weatherArray);
 
+    }).catch ((error) => {
+        response.status(500).send('something went wrong');
     });
-
-// } catch(error){
-//     response.status(500).send('something went wrong');
-// }
 }
 
 function Weather(valid_date, weather){
@@ -115,6 +109,8 @@ console.log(apiObject[i]);
 }
 response.status(200).json(trailsArray);
 
+}).catch ((error) => {
+    response.status(500).send('something went wrong');
 });
 
 }
