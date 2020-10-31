@@ -12,6 +12,7 @@ let pg = require('pg');
 //client??
 let client = new pg.Client(process.env.DATABASE_URL);
 let superagent = require('superagent');
+const { request, response } = require('express');
 
 
 
@@ -23,7 +24,7 @@ const trailsAPI = process.env.TRAIL_API_KEY
 
 
 //get
-app.get('/location', handleLocation);
+app.get('/location', locationChecking);
 
 app.get('/weather', handleWeather);
 
@@ -34,21 +35,62 @@ let lat = " ";
 let lon = " ";
 ///location
 /////////////////////////////////////////////
-function handleLocation(request, response){
+function handleLocation(city, request, response){
 
     
-    let city = request.query.city;
+    
     currentCity = city; 
     superagent.get(`https://eu1.locationiq.com/v1/search.php?key=${locationAPI}&q=${city}&format=json`).then((data)=>{
+        console.log('superagent location');
         let apiObject = data.body[0];
         let locationObject = new Location(city, apiObject.display_name, apiObject.lat, apiObject.lon);
         lat = apiObject.lat;
         lon = apiObject.lon;
+
+        let insert = `INSERT INTO locations (search_query , formatted_query , latitude , longitude) VALUES ($1,$2,$3,$4) RETURNING *;`;
+
+        //mapping
+        let values = [city, apiObject.display_name, apiObject.lat, apiObject.lon];
+
+        client.query(insert, values)
+          .then(data => {
+         
+           
+          }).catch(error => {
+            console.log('something went wrong123 ', error);
+    
+          });
+
         response.status(200).json(locationObject);
     }).catch ((error) => {
-        response.status(500).send('something went wrong');
+        response.status(500).send('something went wrong456');
     });
 }
+
+function locationChecking(request,response){
+    let city = request.query.city;
+    let selectStatement = `SELECT search_query,formatted_query,latitude,longitude FROM locations WHERE search_query='${city}';`;
+    client.query(selectStatement).then(data=>{
+
+    
+    if (data.rowCount !== 0) {
+        console.log('data');
+        res.send(data.rows[0]);
+      }
+  
+      else {
+        console.log('handelLocation from checkerlocation');
+        handleLocation(city, request, response);
+      }
+  
+  
+    }).catch((error) => {
+      console.log('catch Data');
+      res.send('error');
+  
+    });
+}
+
 
 function Location(city, display_name, lat, lon){
 
@@ -133,6 +175,8 @@ function Trails(name, location, length, stars, starVotes, summary, url, conditio
     
 
 }
+
+
 
 //listen
 client.connect().then((data)=>{
