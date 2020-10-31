@@ -20,8 +20,9 @@ const { request, response } = require('express');
 const PORT = process.env.PORT;
 const weatherAPI = process.env.WEATHER_API_KEY;
 const locationAPI = process.env.GEOCODE_API_KEY;
-const trailsAPI = process.env.TRAIL_API_KEY
-
+const trailsAPI = process.env.TRAIL_API_KEY;
+const moviesAPI = process.env.MOVIE_API_KEY;
+const yelpAPI = process.env.YELP_API_KEY;
 
 //get
 app.get('/location', locationChecking);
@@ -30,15 +31,19 @@ app.get('/weather', handleWeather);
 
 app.get('/trails', handleTrails);
 
-let currentCity = "amman";
+app.get('/movies', handleMovies);
+
+app.get('/yelp', handleYelp);
+
+
+let currentCity = "london";
 let lat = " ";
 let lon = " ";
 ///location
 /////////////////////////////////////////////
 function handleLocation(city, request, response){
 
-    
-    
+
     currentCity = city; 
     superagent.get(`https://eu1.locationiq.com/v1/search.php?key=${locationAPI}&q=${city}&format=json`).then((data)=>{
         console.log('superagent location');
@@ -75,7 +80,9 @@ function locationChecking(request,response){
     
     if (data.rowCount !== 0) {
         console.log('data');
-        res.send(data.rows[0]);
+        lat = data.rows[0].latitude;
+        lon = data.rows[0].longitude;
+        response.send(data.rows[0]);
       }
   
       else {
@@ -86,7 +93,7 @@ function locationChecking(request,response){
   
     }).catch((error) => {
       console.log('catch Data');
-      res.send('error');
+      response.send('error');
   
     });
 }
@@ -139,8 +146,7 @@ function Weather(valid_date, weather){
 
 function handleTrails(request,response){
 
-
-
+console.log(lat,lon);
 superagent.get(`https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&maxDistance=50&key=${trailsAPI}`).then((data)=>{
 
 
@@ -177,6 +183,78 @@ function Trails(name, location, length, stars, starVotes, summary, url, conditio
 }
 
 
+function handleMovies(request, response){
+
+   
+       superagent.get(`https://api.themoviedb.org/3/search/movie?api_key=${moviesAPI}&query=${currentCity}`).then((data)=>{
+           let moviesArray = []
+           let apiObject = data.body.results;
+         
+           for (let i=0 ; i < apiObject.length ; i++){
+           
+           let moviesObject = new Movie(apiObject[i].title, apiObject[i].overview, apiObject[i].vote_average, apiObject[i].vote_count, apiObject[i].poster_path, apiObject[i].popularity, apiObject[i].release_date);
+           moviesArray.push(moviesObject);
+           }
+           response.status(200).json(moviesArray);
+   
+       }).catch ((error) => {
+           response.status(500).send('something went wrong');
+       });
+   }
+
+   function Movie(title, overview, vote_average, vote_count, poster_path, popularity, release_date ){
+
+
+    this.title = title;
+    this.overview = overview;
+    this.average_votes = vote_average;
+    this.total_votes = vote_count;
+    this.image_url = `https://image.tmdb.org/t/p/w500${poster_path}`;
+    this.popularity = popularity;
+    this.released_on = release_date;
+   }
+
+
+
+function handleYelp(request,response){
+  
+const yelpParameters = {
+
+    terms : 'restaurant',
+    location : currentCity,
+
+};
+
+    superagent.get(`https://api.yelp.com/v3/businesses/search`).query(yelpParameters).set('Authorization', `Bearer ${yelpAPI}`).then((data)=>{
+        let yelpArray = [];
+     
+        let apiObject = data.body.businesses;
+      
+        for (let i=0 ; i < apiObject.length ; i++){
+        
+        let yelpObject = new Yelp(apiObject[i].name, apiObject[i].image_url, apiObject[i].price, apiObject[i].rating, apiObject[i].url);
+        yelpArray.push(yelpObject);
+        };
+
+        response.status(200).json(yelpArray);
+
+    }).catch ((error) => {
+        response.status(500).send('something went wrong');
+    });
+
+
+}
+
+
+function Yelp(name, image_url, price, rating, url){
+
+    this.name = name;
+    this.image_url = image_url;
+    this.price = price;
+    this.rating = rating;
+    this.url = url;
+
+}
 
 //listen
 client.connect().then((data)=>{
