@@ -7,8 +7,12 @@ app.use(cors());
 
 require('dotenv').config();
 
+
+let pg = require('pg');
+//client??
+let client = new pg.Client(process.env.DATABASE_URL);
 let superagent = require('superagent');
-const { query } = require('express');
+
 
 
 //env
@@ -41,13 +45,9 @@ function handleLocation(request, response){
         lat = apiObject.lat;
         lon = apiObject.lon;
         response.status(200).json(locationObject);
+    }).catch ((error) => {
+        response.status(500).send('something went wrong');
     });
-
-  
-    // } catch (error) {
-    //     response.status(500).send('something went wrong');
-
-    // }
 }
 
 function Location(city, display_name, lat, lon){
@@ -81,11 +81,9 @@ function handleWeather(request, response){
         }
         response.status(200).json(weatherArray);
 
+    }).catch ((error) => {
+        response.status(500).send('something went wrong');
     });
-
-// } catch(error){
-//     response.status(500).send('something went wrong');
-// }
 }
 
 function Weather(valid_date, weather){
@@ -115,6 +113,8 @@ console.log(apiObject[i]);
 }
 response.status(200).json(trailsArray);
 
+}).catch ((error) => {
+    response.status(500).send('something went wrong');
 });
 
 }
@@ -135,8 +135,14 @@ function Trails(name, location, length, stars, starVotes, summary, url, conditio
 }
 
 //listen
-app.listen(PORT, ()=>{
-    console.log(`app is listening on this port ${PORT}`)
+client.connect().then((data)=>{
+    app.listen(PORT, ()=>{
+        console.log(`app is listening on this port ${PORT}`)
+    });
+}).catch ((error) => {
+    response.status(500).send('something went wrong',error);
 });
+
+
 
 
