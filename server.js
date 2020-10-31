@@ -7,8 +7,12 @@ app.use(cors());
 
 require('dotenv').config();
 
+
+let pg = require('pg');
+//client??
+let client = new pg.Client(process.env.DATABASE_URL);
 let superagent = require('superagent');
-const { query } = require('express');
+
 
 
 //env
@@ -131,8 +135,14 @@ function Trails(name, location, length, stars, starVotes, summary, url, conditio
 }
 
 //listen
-app.listen(PORT, ()=>{
-    console.log(`app is listening on this port ${PORT}`)
+client.connect().then((data)=>{
+    app.listen(PORT, ()=>{
+        console.log(`app is listening on this port ${PORT}`)
+    });
+}).catch ((error) => {
+    response.status(500).send('something went wrong',error);
 });
+
+
 
 
