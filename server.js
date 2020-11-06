@@ -137,7 +137,7 @@ function handleWeather(request, response){
 
 function Weather(valid_date, weather){
     this.forecast = weather;
-    this.time = valid_date;
+    this.time = new Date(valid_date).toDateString();
 }
 //////////////////////////////////////////
 
@@ -215,13 +215,20 @@ function handleMovies(request, response){
    }
 
 
+   
 
 function handleYelp(request,response){
   
+    let page = request.query.page;
+    let pagNum = 5; //5 numbers in each request
+    let beginnigPage = (page-1)*pagNum;
+
 const yelpParameters = {
 
     terms : 'restaurant',
     location : currentCity,
+    limit : 5,
+    offset : beginnigPage,
 
 };
 
