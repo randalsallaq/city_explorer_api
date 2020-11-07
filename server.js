@@ -36,9 +36,9 @@ app.get('/movies', handleMovies);
 app.get('/yelp', handleYelp);
 
 
-let currentCity = "london";
-let lat = " ";
-let lon = " ";
+// let currentCity = "london";
+// let lat = " ";
+// let lon = " ";
 ///location
 /////////////////////////////////////////////
 function handleLocation(city, request, response){
@@ -116,6 +116,7 @@ this.longitude = lon;
 function handleWeather(request, response){
 
  let weatherArray = [];
+ let currentCity = request.query.search_query;
 
 // try{
     superagent.get(`https://api.weatherbit.io/v2.0/forecast/daily?city=${currentCity}&key=${weatherAPI}`).then((data)=>{
@@ -146,7 +147,10 @@ function Weather(valid_date, weather){
 
 function handleTrails(request,response){
 
-console.log(lat,lon);
+
+let lat = request.query.latitude;
+let lon = request.query.longitude;
+
 superagent.get(`https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&maxDistance=50&key=${trailsAPI}`).then((data)=>{
 
 
@@ -185,7 +189,7 @@ function Trails(name, location, length, stars, starVotes, summary, url, conditio
 
 function handleMovies(request, response){
 
-   
+   let currentCity = request.query.search_query;
        superagent.get(`https://api.themoviedb.org/3/search/movie?api_key=${moviesAPI}&query=${currentCity}`).then((data)=>{
            let moviesArray = []
            let apiObject = data.body.results;
@@ -219,6 +223,8 @@ function handleMovies(request, response){
 
 function handleYelp(request,response){
   
+let currentCity = request.query.search_query;
+
     let page = request.query.page;
     let pagNum = 5; //5 numbers in each request
     let beginnigPage = (page-1)*pagNum;
@@ -269,7 +275,8 @@ client.connect().then((data)=>{
         console.log(`app is listening on this port ${PORT}`)
     });
 }).catch ((error) => {
-    response.status(500).send('something went wrong',error);
+    // response.status(500).send(error);
+    console.log(error);
 });
 
 
